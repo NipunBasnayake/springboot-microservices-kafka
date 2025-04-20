@@ -1,47 +1,18 @@
 package com.product.product.service;
 
 import com.product.product.dto.ProductDTO;
-import com.product.product.model.Product;
-import com.product.product.repo.ProductRepo;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Service
-@Transactional
-public class ProductService {
-    @Autowired
-    private ProductRepo productRepo;
+public interface ProductService {
 
-    @Autowired
-    private ModelMapper modelMapper;
+    List<ProductDTO> getAllProducts();
 
-    public List<ProductDTO> getAllProducts() {
-        List<Product>productList = productRepo.findAll();
-        return modelMapper.map(productList, new TypeToken<List<ProductDTO>>(){}.getType());
-    }
+    ProductDTO saveProduct(ProductDTO product);
 
-    public ProductDTO saveProduct(ProductDTO productDTO) {
-        productRepo.save(modelMapper.map(productDTO, Product.class));
-        return productDTO;
-    }
+    ProductDTO updateProduct(ProductDTO product);
 
-    public ProductDTO updateProduct(ProductDTO productDTO) {
-        productRepo.save(modelMapper.map(productDTO, Product.class));
-        return productDTO;
-    }
+    String deleteProduct(Integer productId);
 
-    public String deleteProduct(Integer productId) {
-        productRepo.deleteById(productId);
-        return "Product deleted";
-    }
-
-    public ProductDTO getProductById(Integer productId) {
-        Product product = productRepo.getProductById(productId);
-        return modelMapper.map(product, ProductDTO.class);
-    }
+    ProductDTO getProductById(Integer productId);
 }
