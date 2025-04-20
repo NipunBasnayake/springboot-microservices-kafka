@@ -12,10 +12,10 @@ import com.product.product.dto.ProductDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -63,16 +63,22 @@ public class OrderServiceImpl implements OrderService {
                     .block();
 
             assert productResponse != null;
-            log.info(productResponse.toString());
 
             if (inventoryResponse.getQuantity() > 0) {
-                Orders order = modelMapper.map(orderDTO, Orders.class);
-                Orders savedOrder = orderRepo.save(order);
-                return new SuccessOrderResponse(modelMapper.map(savedOrder, OrderDTO.class));
+                if (productResponse.getForSale() == 1) {
+                    Orders order = modelMapper.map(orderDTO, Orders.class);
+                    Orders savedOrder = orderRepo.save(order);
+                    return new SuccessOrderResponse(modelMapper.map(savedOrder, OrderDTO.class));
+                } else {
+                    return new ErrorOrderResponse("This item is not for sale");
+                }
             } else {
-                return new ErrorOrderResponse("Item not available");
+                return new ErrorOrderResponse("Items not available");
             }
-        } catch (Exception e) {
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode().is5xxServerError()) {
+                return new ErrorOrderResponse("Item not available in Database");
+            }
             log.error("Error while searching inventory ", e);
         }
         return null;
